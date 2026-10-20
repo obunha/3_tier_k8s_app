@@ -9,7 +9,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1" # Change this to your preferred region
+  region = "af-south-1" # Change this to your preferred region
 }
 
 # 1. Create ECR Repositories for the images
