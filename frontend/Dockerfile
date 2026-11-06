@@ -10,7 +10,7 @@ RUN npm install
 COPY . .
 
 # Build the React app
-RUN CI=false npm run build
+RUN DISABLE_ESLINT_PLUGIN=true npm run build
 
 # Production stage
 FROM nginx:stable-alpine
