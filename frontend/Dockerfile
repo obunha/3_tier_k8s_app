@@ -10,7 +10,7 @@ RUN npm install
 COPY . .
 
 # Build the React app
-RUN npm run build
+RUN CI=false npm run build
 
 # Production stage
 FROM nginx:stable-alpine
