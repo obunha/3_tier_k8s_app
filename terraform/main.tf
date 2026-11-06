@@ -42,7 +42,7 @@ module "vpc" {
 # 3. EKS Cluster
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.0"
+  version = "~> 20.0"
 
   cluster_name    = "three-tier-cluster"
   cluster_version = "1.37"
