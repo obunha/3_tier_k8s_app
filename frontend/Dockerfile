@@ -8,6 +8,7 @@ RUN npm install
 RUN mkdir -p src
 RUN echo 'import React, { useEffect, useState } from "react";\n\nfunction App() {\n  const [data, setData] = useState([]);\n  useEffect(() => {\n    fetch(`${process.env.REACT_APP_API_URL}/api/data`)\n      .then(res => res.json())\n      .then(json => setData(json));\n  }, []);\n  return (\n    <div>\n      <h1>3-Tier K8s App</h1>\n      <ul>{data.map((item, i) => <li key={i}>{item.name}</li>)}</ul>\n    </div>\n  );\n}\nexport default App;' > src/App.js
 RUN echo 'import React from "react";\nimport ReactDOM from "react-dom/client";\nimport App from "./App";\nconst root = ReactDOM.createRoot(document.getElementById("root"));\nroot.render(<App />);' > src/index.js
+RUN mkdir -p public
 RUN echo '<div id="root"></div>' > public/index.html
 # Note: In a real scenario, we would COPY the source. Here we generate it for the demo.
 RUN npm run build || echo "Build skipped for mock"
