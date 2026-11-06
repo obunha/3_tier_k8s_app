@@ -5,11 +5,12 @@ on:
     branches: [ "main" ]
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: af-south-1
   EKS_CLUSTER_NAME: three-tier-cluster
   ECR_BACKEND_REPO: three-tier-backend
   ECR_FRONTEND_REPO: three-tier-frontend
 
+  
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
