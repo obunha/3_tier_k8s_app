@@ -1,9 +1,8 @@
-
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
 
 env:
   AWS_REGION: af-south-1
@@ -14,30 +13,26 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     permissions:
-      id-token: write
+      id-token: write # Required for AWS OIDC
       contents: read
 
     steps:
-      # 1. Checkout source code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Authenticate with AWS using OIDC
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 3. Login to Amazon ECR
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 4. Build and push backend
-      - name: Build and Push Backend
+      - name: Build, Tag, and Push Backend
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
@@ -45,8 +40,7 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG ./backend
           docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG
 
-      # 5. Build and push frontend
-      - name: Build and Push Frontend
+      - name: Build, Tag, and Push Frontend
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
@@ -54,37 +48,20 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG ./frontend
           docker push $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG
 
-      # 6. Configure Kubernetes authentication
       - name: Update Kubeconfig
-        run: |
-          aws eks update-kubeconfig \
-            --region $AWS_REGION \
-            --name $EKS_CLUSTER_NAME
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
-      # 7. Verify cluster access
-      - name: Verify EKS Connection
-        run: |
-          kubectl get nodes
-          kubectl auth can-i create deployments -n app
-
-      # 8. Deploy application
       - name: Deploy to EKS
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
+          export KUBECONFIG=~/.kube/config
           sed -i "s|image: my-backend:latest|image: $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG|g" k8s/backend.yaml
-
           sed -i "s|image: my-frontend:latest|image: $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG|g" k8s/frontend.yaml
 
           kubectl apply -f k8s/namespace.yaml
-
           kubectl apply -f k8s/mysql.yaml
           kubectl apply -f k8s/backend.yaml
           kubectl apply -f k8s/frontend.yaml
           kubectl apply -f k8s/ingress.yaml
-
-      # 9. Verify deployment
-      - name: Check Deployment Status
-        run: |
-          kubectl get pods,svc,ingress -n app
