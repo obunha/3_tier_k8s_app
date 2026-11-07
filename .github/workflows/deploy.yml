@@ -14,7 +14,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-     # id-token: write # Required for AWS OIDC
+      id-token: write # Required for AWS OIDC
       contents: read
 
     steps:
@@ -48,6 +48,8 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG ./frontend
           docker push $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG
 
+      - name: Verify AWS Identity
+        run: aws sts get-caller-identity    
       - name: Update Kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
