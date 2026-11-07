@@ -63,6 +63,7 @@ jobs:
           sed -i "s|image: my-frontend:latest|image: $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG|g" k8s/frontend.yaml
 
           kubectl apply -f k8s/namespace.yaml
+          kubectl create secret generic db-secret --namespace app --from-literal=username="$DB_USER" --from-literal=password="$DB_PASSWORD" --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply -f k8s/mysql.yaml
           kubectl apply -f k8s/backend.yaml
           kubectl apply -f k8s/frontend.yaml
